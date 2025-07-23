@@ -2,35 +2,31 @@ import {
     GetCommentRepliesQueryResult,
     GetPostCommentsQueryResult,
   } from "@/sanity.types";
-  import { getCommentReplies } from "@/sanity/lib/comment/getCommentReplies";
   import { UserCircle } from "lucide-react";
   import Image from "next/image";
   import React from "react";
   import TimeAgo from "../TimeAgo";
-  import CommentList from "./CommentList";
   import CommentReply from "./CommentReply";
   import PostVoteButtons from "../post/PostVoteButtons";
+  import CommentWithReplies from "./CommentWithReplies";
   
   async function Comment({
     postId,
     comment,
-    userId,
   }: {
     postId: string;
     comment:
       | GetPostCommentsQueryResult[number]
       | GetCommentRepliesQueryResult[number];
-    userId: string | null;
   }) {
-    const replies = await getCommentReplies(comment._id, userId);
-    const userVoteStatus = comment.votes.voteStatus;
+    const userVoteStatus = comment.votes?.voteStatus || null;
   
     return (
       <article className="py-5 border-b border-gray-100 last:border-0">
         <div className="flex gap-4">
           <PostVoteButtons
             contentId={comment._id}
-            votes={comment.votes}
+            votes={comment.votes || { upvotes: 0, downvotes: 0, netScore: 0 }}
             vote={userVoteStatus}
             contentType="comment"
           />
@@ -66,10 +62,11 @@ import {
             <CommentReply postId={postId} comment={comment} />
   
             {/* Comment replies - supports infinite nesting */}
-            {replies?.length > 0 && (
-              <div className="mt-3 ps-2 border-s-2 border-gray-100">
-                <CommentList postId={postId} comments={replies} userId={userId} />
-              </div>
+            {comment.replies && comment.replies.length > 0 && (
+                <CommentWithReplies 
+                  postId={postId} 
+                  initialReplies={comment.replies as unknown as GetCommentRepliesQueryResult} 
+                />
             )}
           </div>
         </div>

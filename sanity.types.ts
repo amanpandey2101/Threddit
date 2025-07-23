@@ -476,82 +476,43 @@ export type GetPostByIdQueryResult = {
 export type GetAllPostsQueryResult = Array<{
   _id: string;
   title: string | null;
-  slug: null;
+  slug: string | null;
   body: Array<{
-    children?: Array<{
-      marks?: Array<string>;
-      text?: string;
-      _type: "span";
-      _key: string;
-    }>;
-    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
-    listItem?: "bullet" | "number";
-    markDefs?: Array<{
-      href?: string;
-      _type: "link";
-      _key: string;
-    }>;
-    level?: number;
-    _type: "block";
     _key: string;
+    _type: "block";
+    children: Array<{
+      _key: string;
+      _type: "span";
+      marks: Array<string> | null;
+      text: string | null;
+    }> | null;
+    level?: number | null;
+    listItem?: "bullet" | null;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal" | null;
   }> | null;
   publishedAt: string | null;
   author: {
     _id: string;
-    _type: "user";
-    _createdAt: string;
-    _updatedAt: string;
-    _rev: string;
-    username?: string;
-    email?: string;
-    imageUrl?: string;
-    joinedAt?: string;
-    isReported?: "not_reported" | "reported" | "resolved" | "under_review";
+    username: string | null;
   } | null;
   subreddit: {
     _id: string;
-    _type: "subreddit";
-    _createdAt: string;
-    _updatedAt: string;
-    _rev: string;
-    title?: string;
-    description?: string;
-    slug?: Slug;
-    image?: {
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-      };
-      media?: unknown;
-      hotspot?: SanityImageHotspot;
-      crop?: SanityImageCrop;
-      alt?: string;
-      _type: "image";
-    };
-    moderator?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "user";
-    };
-    createdAt?: string;
+    title: string | null;
+    slug: string | null;
   } | null;
   image: {
-    asset?: {
+    _key: string | null;
+    _type: "image";
+    alt?: string | null;
+    asset: {
       _ref: string;
       _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-    };
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    alt?: string;
-    _type: "image";
+    } | null;
   } | null;
   isDeleted: boolean | null;
+  voteScore?: number | null;
+  hot?: number | null;
+  commentCount?: number | null;
 }>;
 
 // Source: ./sanity/lib/subreddit/createSubreddit.ts

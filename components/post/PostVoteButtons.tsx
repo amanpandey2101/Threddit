@@ -102,39 +102,39 @@ function PostVoteButtons({
   };
 
   return (
-    <div className="flex flex-col items-center bg-gray-50 p-2 rounded-l-md">
+    <div className="flex items-center gap-0.5">
       <button
         disabled={!isSignedIn || isPending || !user}
         onClick={handleUpvote}
-        className={`p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed ${
-          optimisticVote === "upvote" ? "bg-orange-100" : "hover:bg-gray-100"
+        className={`hover:bg-gray-100 p-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+          optimisticVote === "upvote" ? "text-orange-500" : "text-gray-400"
         } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <ArrowUp
           className={`w-5 h-5 ${
             optimisticVote === "upvote"
-              ? "text-orange-500 font-bold"
-              : "text-gray-400 hover:text-orange-500"
+              ? "stroke-2"
+              : "hover:text-orange-500"
           }`}
         />
       </button>
 
-      <span className="text-sm font-medium text-gray-900">
+      <span className="text-xs font-medium text-gray-900 min-w-[2ch] text-center px-1">
         {optimisticScore}
       </span>
 
       <button
         disabled={!isSignedIn || isPending || !user}
         onClick={handleDownvote}
-        className={`p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed ${
-          optimisticVote === "downvote" ? "bg-blue-100" : "hover:bg-gray-100"
+        className={`hover:bg-gray-100 p-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+          optimisticVote === "downvote" ? "text-blue-500" : "text-gray-400"
         } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <ArrowDown
           className={`w-5 h-5 ${
             optimisticVote === "downvote"
-              ? "text-blue-500 font-bold"
-              : "text-gray-400 hover:text-blue-500"
+              ? "stroke-2"
+              : "hover:text-blue-500"
           }`}
         />
       </button>

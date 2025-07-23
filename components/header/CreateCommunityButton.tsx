@@ -142,7 +142,7 @@ function CreateCommunityButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        className="w-full p-2 pl-5 flex items-center rounded-md cursor-pointer bg-black text-white hover:bg-black transition-all duration-200 disabled:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full p-2 pl-5 flex items-center rounded-md cursor-pointer bg-blue-600 text-white hover:bg-blue-700 cursor-pointer transition-all duration-200 disabled:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={!user}
       >
         <Plus className="w-4 h-4 mr-2" />

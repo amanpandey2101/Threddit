@@ -1,5 +1,5 @@
 import { defineQuery } from "groq";
-import { sanityFetch } from "../live";
+import { client } from "../client";
 
 // Get replies to a specific comment
 export async function getCommentReplies(
@@ -23,10 +23,8 @@ export async function getCommentReplies(
       } | order(votes.netScore desc) //votes.netScore desc -> if you want to sort by net score
     `);
 
-  const result = await sanityFetch({
-    query: getCommentRepliesQuery,
-    params: { commentId, userId: userId || "" },
-  });
+    const result = await client.fetch(getCommentRepliesQuery, { commentId, userId: userId || "" });
 
-  return result.data || [];
+
+  return result || [];
 }

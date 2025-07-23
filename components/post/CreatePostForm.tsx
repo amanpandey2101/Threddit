@@ -1,18 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Sparkles, Undo } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "../ui/button";
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Textarea } from "@/components/ui/textarea";
 import { createPost } from "@/action/createPost";
+import { useChat } from "@ai-sdk/react";
+import dynamic from 'next/dynamic'
+import type { MDXEditorMethods } from '@mdxeditor/editor'
+
+const Editor = dynamic(() => import('./Editor'), { ssr: false })
 
 function CreatePostForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
+  const [originalTitle, setOriginalTitle] = useState("");
+  const [titleChanged, setTitleChanged] = useState(false);
   const [body, setBody] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -21,6 +27,17 @@ function CreatePostForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const subreddit = searchParams.get("subreddit");
+  const { append, isLoading: isAiLoading } = useChat({
+    api: "/api/generate",
+    onFinish: (message) => {
+      const newContent = message.content;
+      setBody(newContent);
+      editorRef.current?.setMarkdown(newContent);
+    },
+  });
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const editorRef = useRef<MDXEditorMethods>(null);
 
   if (!subreddit) {
     return (
@@ -29,6 +46,53 @@ function CreatePostForm() {
       </div>
     );
   }
+
+  const handleGenerate = () => {
+    if (title) {
+      setBody("");
+      editorRef.current?.setMarkdown("");
+      append({ role: "user", content: title });
+    } else {
+      setErrorMessage("Please enter a title first");
+    }
+  };
+
+  const handleSuggestTitles = async () => {
+    const prompt = title;
+    if (prompt) {
+      setIsSuggesting(true);
+      setErrorMessage("");
+      try {
+        const response = await fetch("/api/suggest-title", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+        });
+        const data = await response.json();
+        setSuggestions(data.suggestions);
+      } catch (error) {
+        console.error(error);
+        setErrorMessage("Failed to get title suggestions");
+      } finally {
+        setIsSuggesting(false);
+      }
+    } else {
+      setErrorMessage("Please write a title or some content first");
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion: string) => {
+    if (!titleChanged) {
+      setOriginalTitle(title);
+    }
+    setTitle(suggestion);
+    setTitleChanged(true);
+  };
+
+  const handleUndoTitle = () => {
+    setTitle(originalTitle);
+    setTitleChanged(false);
+  };
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -122,34 +186,98 @@ function CreatePostForm() {
         )}
 
         <div className="space-y-2">
-          <label htmlFor="title" className="text-sm font-medium">
-            Title
-          </label>
+          <div className="flex justify-between items-center">
+            <label htmlFor="title" className="text-sm font-medium">
+              Title
+            </label>
+            <div className="flex items-center">
+              {titleChanged && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUndoTitle}
+                >
+                  <Undo className="w-4 h-4 mr-2" />
+                  Undo
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSuggestTitles}
+                disabled={isSuggesting}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {isSuggesting
+                  ? "..."
+                  : suggestions.length > 0
+                  ? "Reload Suggestions"
+                  : "Suggest Titles"}
+              </Button>
+            </div>
+          </div>
           <Input
             id="title"
             name="title"
             placeholder="Title of your post"
             className="w-full focus:ring-2 focus:ring-blue-500"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setTitleChanged(false);
+              setSuggestions([]);
+            }}
             required
             maxLength={300}
           />
+          {suggestions.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2">
+              {suggestions.map((s, i) => (
+                <Button
+                  key={i}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSelectSuggestion(s)}
+                >
+                  {s}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="body" className="text-sm font-medium">
-            Body (optional)
-          </label>
-          <Textarea
-            id="body"
-            name="body"
-            placeholder="Text (optional)"
-            className="w-full focus:ring-2 focus:ring-blue-500"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={5}
-          />
+          <div className="flex justify-between items-center">
+            <label htmlFor="body" className="text-sm font-medium">
+              Body (optional)
+            </label>
+            <div className="flex gap-4 items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleGenerate}
+                disabled={isAiLoading}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {isAiLoading ? "Generating..." : "Generate with AI"}
+              </Button>
+            </div>
+          </div>
+          <Suspense fallback={<div>Loading editor...</div>}>
+    
+            <div className="w-full overflow-y-auto rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+              <Editor
+                editorRef={editorRef}
+                onChange={(md) => setBody(md)}
+                markdown={body}
+                className="w-full h-96 overflow-auto"
+              />
+            </div>
+          </Suspense>
         </div>
 
         <div className="space-y-2">
@@ -199,7 +327,7 @@ function CreatePostForm() {
 
         <Button
           type="submit"
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 transition-colors"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 transition-colors"
           disabled={isLoading}
         >
           {isLoading ? "Creating..." : "Post"}

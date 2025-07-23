@@ -7,11 +7,9 @@ import {
   async function CommentList({
     postId,
     comments,
-    userId,
   }: {
     postId: string;
     comments: GetPostCommentsQueryResult | GetCommentRepliesQueryResult;
-    userId: string | null;
   }) {
     const isRootComment = !comments.some((comment) => comment.parentComment);
   
@@ -32,7 +30,6 @@ import {
                 key={comment._id}
                 postId={postId}
                 comment={comment}
-                userId={userId}
               />
             ))
           ) : (

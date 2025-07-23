@@ -3,8 +3,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import Post from "./Post";
 import type { GetAllPostsQueryResult } from "@/sanity.types";
 
-async function PostsList() {
-  const posts: GetAllPostsQueryResult = await getPosts();
+async function PostsList({ sortBy }: { sortBy?: "publishedAt" | "voteScore" | "hot" }) {
+  const posts: GetAllPostsQueryResult = await getPosts(sortBy);
   const user = await currentUser();
 
   return (
